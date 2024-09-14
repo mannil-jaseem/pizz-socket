@@ -1,0 +1,30 @@
+{
+  "name": "log-reader",
+  "version": "3.0.0",
+  "description": "new logreader backend application",
+  "main": "index.js",
+  "scripts": {
+    "dev": "ts-node-dev ./src/index.ts",
+    "start": "node dist/index.js",
+    "build": "tsc"
+  },
+  "author": "mannil_jaseem",
+  "license": "MIT",
+  "dependencies": {
+    "@types/socket.io": "^3.0.2",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "mongoose": "^8.6.0",
+    "morgan": "^1.10.0",
+    "nanoid": "^3.0.0",
+    "picocolors": "^1.0.1",
+    "routing-controllers": "^0.10.4",
+    "socket.io": "^4.7.5",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/morgan": "^1.9.9",
+    "ts-node-dev": "^2.0.0"
+  }
+}
