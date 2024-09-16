@@ -5,12 +5,12 @@ import express, { Request } from "express"
 import cluster, { Worker } from "cluster"
 import { cpus } from "os"
 import { useExpressServer } from "routing-controllers"
-import "./controller/UserController";
+import "./controller/Ordercontroller";
 import morgan from "morgan"
 import Connection from "./database/connection";
 import http from 'http';
 import { Socket } from "./SOCKET";
-// import { Server } from 'socket.io';
+const port = process.env.PORT
 
 
 if (false) {
@@ -24,37 +24,42 @@ if (false) {
         cluster.fork();
     });
 } else {
+    application().then(app=>{
+        app.on("error", (error: any) => {
+            var bind = typeof port === 'string' ? 'Pipe ' + port : 'Port ' + port;
+            if (error.syscall !== 'listen') throw error;
+            switch (error.code) {
+                case 'EACCES':
+                    console.error(bind + ' requires elevated privileges');
+                    process.exit(1);
+                    break;
+                case 'EADDRINUSE':
+                    console.error(bind + ' is already in use');
+                    process.exit(1);
+                    break;
+                default:
+                    console.error(error);
+            }
+        })
+    })
+}
+
+async function application(){    
     const app = express()
     const server = http.createServer(app);
-    const socket = new Socket(server).init()
+    const socket =await new Socket(server).init()
     app.use((req:Request,res,next)=>{
         req.sockIO=socket
+        next()
     })
-    const port = process.env.PORT
     app.use(express.json())
     app.use(express.urlencoded({ extended: false }))
     useExpressServer(app)
     app.use(morgan("dev"))
     Connection.init()
-
+    
     server.listen(port, () => {
         console.log(`listening to port ${port}`)
     })
-
-    app.on("error", (error: any) => {
-        var bind = typeof port === 'string' ? 'Pipe ' + port : 'Port ' + port;
-        if (error.syscall !== 'listen') throw error;
-        switch (error.code) {
-            case 'EACCES':
-                console.error(bind + ' requires elevated privileges');
-                process.exit(1);
-                break;
-            case 'EADDRINUSE':
-                console.error(bind + ' is already in use');
-                process.exit(1);
-                break;
-            default:
-                console.error(error);
-        }
-    })
+    return app
 }

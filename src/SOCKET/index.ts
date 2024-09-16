@@ -5,7 +5,7 @@ import http from 'http';
 declare global {
     namespace Express {
       interface Request {
-        sockIO?: Promise<Server>;
+        sockIO?: Server;
       }
     }
   }
@@ -18,7 +18,7 @@ export class Socket {
         // Initialize a Socket.IO server
         const io = new Server(this.server, {
             cors: {
-                origin: "*", // Allow requests from any origin (or specify the URL of your client)
+                origin: "*",
                 methods: ["GET", "POST"],
             },
         });
@@ -44,4 +44,8 @@ export class Socket {
         });
         return io
     }
+    // to save socket ids wrt to user
+    // private async saveConnection(){
+    //     // save 
+    // }
 }

@@ -8,6 +8,9 @@ export interface IOrder {
     ITEMS: Array<{ MENU_ID: string, QUANTITY: number, PRICE: number, TOTAL: number }>;
     AMOUNT: number;
     STATUS: string;
+    TIMESTAMP: Date;
+    TOTAL_ITEMS: number;
+    COMPLETED: number;
 }
 
 const orderSchema = new Schema<IOrder>({
@@ -21,7 +24,10 @@ const orderSchema = new Schema<IOrder>({
         TOTAL: { type: Number, required: true },// quatity * price
     }],
     AMOUNT: { type: Number, required: true },
-    STATUS: { type: String, required: true, enum:['Pending','In-progress','Completed'] }
+    STATUS: { type: String, required: true, enum: ['Pending', 'In-progress', 'Completed'] },
+    TIMESTAMP: { type: Date, default: Date.now },
+    TOTAL_ITEMS: { type: Number, required: true },
+    COMPLETED: { type: Number, default: 0 },
 }, {
     versionKey: false,
     toJSON: { virtuals: true },
@@ -31,6 +37,42 @@ const orderSchema = new Schema<IOrder>({
     }
 });
 
+orderSchema.statics = {
+    getOrderItems: function (orderId: string) {
+        return this.aggregate([
+            { $match: { ORDER_ID: orderId } },
+            { $unwind: "$ITEMS" },
+            {
+                $lookup: {
+                    from: "Menu",
+                    localField: "ITEMS.MENU_ID",
+                    foreignField: "MENU_ID",
+                    as: "menu"
+                }
+            },
+            {
+                $unwind: "$menu"
+            },
+            {
+                $group: {
+                    _id: "$ORDER_ID",
+                    ORDER_ID: { $first: "$ORDER_ID" },
+                    USER_ID: { $first: "$USER_ID" },
+                    ITEMS: {
+                        $push: {
+                            MENU_ID: "$ITEMS.MENU_ID",
+                            QUANTITY: "$ITEMS.QUANTITY",
+                            PRICE: "$ITEMS.PRICE",
+                            TOTAL: "$ITEMS.TOTAL",
+                            TYPE: "$menu.TYPE"
+                        }
+                    }
+                }
+            },
+            { $project: { _id: 0 } }
+        ]);
+    }
+}
 // Create unique index on order_id
 orderSchema.index({ ORDER_ID: 1 }, { unique: true });
 
